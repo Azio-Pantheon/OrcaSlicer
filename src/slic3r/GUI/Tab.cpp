@@ -2350,7 +2350,6 @@ void TabPrint::build()
         optgroup->append_single_option_line("support_on_build_plate_only", "support_settings_support#on-build-plate-only");
         optgroup->append_single_option_line("support_critical_regions_only", "support_settings_support#support-critical-regions-only");
         optgroup->append_single_option_line("support_remove_small_overhang", "support_settings_support#remove-small-overhangs");
-        optgroup->append_single_option_line("low_poly_tree");
 
         //optgroup->append_single_option_line("enforce_support_layers", "support_settings_support");
 
@@ -2407,6 +2406,7 @@ void TabPrint::build()
         optgroup->append_single_option_line("tree_support_adaptive_layer_height", "support_settings_tree");
         optgroup->append_single_option_line("tree_support_auto_brim", "support_settings_tree");
         optgroup->append_single_option_line("tree_support_brim_width", "support_settings_tree");
+        optgroup->append_single_option_line("tree_support_low_poly_tree", "support#tree-support-only-options");
 
     page = add_options_page(L("Multimaterial"), "custom-gcode_multi_material"); // ORCA: icon only visible on placeholders
         optgroup = page->new_optgroup(L("Prime tower"), L"param_tower");

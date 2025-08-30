@@ -79,7 +79,7 @@ struct TreeSupportMeshGroupSettings {
         this->support_floor_enable      = config.support_interface_bottom_layers.value > 0;
         this->support_floor_layers      = config.support_interface_bottom_layers.value;
         this->support_roof_pattern      = config.support_interface_pattern;
-        this->low_poly_tree             = config.low_poly_tree.value;
+        this->tree_support_low_poly_tree = config.tree_support_low_poly_tree.value;
         this->support_pattern           = config.support_base_pattern;
         this->support_line_spacing      = scaled<coord_t>(config.support_base_pattern_spacing.value);
         this->support_wall_count        = std::max(1, config.tree_support_wall_count.value);  // at least 1 wall for organic tree support
@@ -155,7 +155,7 @@ struct TreeSupportMeshGroupSettings {
     // Generate a dense slab of material between the top of support and the model. This will create a skin between the model and support.
     bool                            support_roof_enable                     { false };
 
-    bool                            low_poly_tree                           { false };
+    bool                            tree_support_low_poly_tree                           { false };
     // Support Roof Thickness
     // The thickness of the support roofs. This controls the amount of dense layers at the top of the support on which the model rests.
     coord_t                         support_roof_layers                     { 2 };
@@ -284,7 +284,7 @@ public:
           increase_radius_until_radius(mesh_group_settings.support_tree_branch_diameter / 2),
           increase_radius_until_layer(increase_radius_until_radius <= branch_radius ? tip_layers * (increase_radius_until_radius / branch_radius) : (increase_radius_until_radius - branch_radius) / branch_radius_increase_per_layer),
           support_rests_on_model(! mesh_group_settings.support_material_buildplate_only),
-          low_poly_tree(mesh_group_settings.low_poly_tree),
+          tree_support_low_poly_tree(mesh_group_settings.tree_support_low_poly_tree),
           xy_distance(mesh_group_settings.support_xy_distance),
           xy_min_distance(std::min(mesh_group_settings.support_xy_distance, mesh_group_settings.support_xy_distance_overhang)),
           bp_radius(mesh_group_settings.support_tree_bp_diameter / 2),
@@ -417,7 +417,7 @@ public:
      */
     bool support_rests_on_model;
 
-    bool low_poly_tree;
+    bool tree_support_low_poly_tree;
     /*!
      * \brief How far should support be from the model.
      */
