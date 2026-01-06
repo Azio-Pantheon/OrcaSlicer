@@ -804,17 +804,13 @@ void GCodeViewer::init(ConfigOptionMode mode, PresetBundle* preset_bundle)
         msg_dlg.ShowModal();
     }
 
-    if (preset_bundle)
-        m_nozzle_nums = preset_bundle->get_printer_extruder_count();
-
-    // set to color print by default if use multi extruders
-    if (m_nozzle_nums > 1) {
-        m_view_type_sel = std::distance(view_type_items.begin(),std::find(view_type_items.begin(), view_type_items.end(), libvgcode::EViewType::Summary));
-        set_view_type(libvgcode::EViewType::Summary);
-    } else {
-        m_view_type_sel = std::distance(view_type_items.begin(),std::find(view_type_items.begin(), view_type_items.end(), libvgcode::EViewType::ColorPrint));
-        set_view_type(libvgcode::EViewType::ColorPrint);
-    }
+    // Orca:
+    // Default view type at first slice.
+    // May be overridden in load() once we know how many tools are actually used in the G-code.
+    m_nozzle_nums = preset_bundle ? preset_bundle->get_printer_extruder_count() : 1;
+    auto it = std::find(view_type_items.begin(), view_type_items.end(), libvgcode::EViewType::FeatureType);
+    m_view_type_sel = (it != view_type_items.end()) ? std::distance(view_type_items.begin(), it) : 0;
+    set_view_type(libvgcode::EViewType::FeatureType);
 
     BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(": finished");
 }
@@ -1087,6 +1083,22 @@ void GCodeViewer::load_as_gcode(const GCodeProcessorResult& gcode_result, const 
     m_max_print_height = gcode_result.printable_height;
     m_z_offset = gcode_result.z_offset;
 
+    // load_toolpaths(gcode_result, build_volume, exclude_bounding_box);
+    
+    // ORCA: Only show filament/color print preview if more than one tool/extruder is actually used in the toolpaths.
+    // Only reset back to Toolpaths (FeatureType) if we are currently in ColorPrint and this load is single-tool.
+    if (m_viewer.get_used_extruders_count() > 1) {
+        auto it = std::find(view_type_items.begin(), view_type_items.end(), libvgcode::EViewType::ColorPrint);
+        if (it != view_type_items.end())
+            m_view_type_sel = std::distance(view_type_items.begin(), it);
+        set_view_type(libvgcode::EViewType::ColorPrint);
+    } else if (get_view_type() == libvgcode::EViewType::ColorPrint) {
+        auto it = std::find(view_type_items.begin(), view_type_items.end(), libvgcode::EViewType::FeatureType);
+        if (it != view_type_items.end())
+            m_view_type_sel = std::distance(view_type_items.begin(), it);
+        set_view_type(libvgcode::EViewType::FeatureType);
+    }
+
     // BBS: data for rendering color arrangement recommendation
     m_nozzle_nums = print.config().option<ConfigOptionFloats>("nozzle_diameter")->values.size();
     // Orca hack: Hide filament group for non-bbl printers
@@ -1207,7 +1219,7 @@ void GCodeViewer::load_as_gcode(const GCodeProcessorResult& gcode_result, const 
 
     //BBS
     m_conflict_result = gcode_result.conflict_result;
-    if (m_conflict_result) { m_conflict_result.value().layer = m_viewer.get_layer_id_at(m_conflict_result.value()._height); }
+    if (m_conflict_result) { m_conflict_result.value().layer = m_viewer.get_layer_id_at(static_cast<float>(m_conflict_result.value()._height)); }
 
     m_gcode_check_result = gcode_result.gcode_check_result;
 
@@ -2003,7 +2015,7 @@ void GCodeViewer::render_toolpaths()
         if (ImGui::BeginTable("Data", 2)) {
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
-            ImGuiWrapper::text_colored(ImGuiWrapper.COL_ORANGE_LIGHT, "# vertices");
+            ImGuiWrapper::text_colored(ImGuiWrapper::COL_ORANGE_LIGHT, "# vertices");
             ImGui::TableSetColumnIndex(1);
             ImGuiWrapper::text(std::to_string(m_viewer.get_vertices_count()));
 
@@ -4014,7 +4026,7 @@ void GCodeViewer::render_legend(float &legend_height, int canvas_width, int canv
             }
             ImGui::SameLine(max_len);
             char buf[64];
-            int layer = m_viewer.get_layer_id_at(m_viewer.get_layer_id_at(custom_gcode.print_z));
+            int layer = m_viewer.get_layer_id_at(custom_gcode.print_z);
             ::sprintf(buf, "%d",layer );
             imgui.text(buf);
             ImGui::SameLine(max_len * 1.5);
