@@ -885,6 +885,9 @@ void ViewerImpl::reset()
 #else
     m_enabled_segments_count = 0;
     m_enabled_options_count = 0;
+    m_colors_tex_size = 0;
+    m_enabled_segments_tex_size = 0;
+    m_enabled_options_tex_size = 0;
 
     m_settings_used_for_ranges = std::nullopt;
 
